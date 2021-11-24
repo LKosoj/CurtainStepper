@@ -1,0 +1,61 @@
+<head>
+<meta charset='utf-8'>
+<meta http-equiv="Cache-Control" content="no-cache">
+<title>Жалюзи</title>
+
+<link rel="stylesheet" href="/style.css">
+
+<script>
+
+function sleep(milliseconds) {
+  var start = new Date().getTime();
+  for (var i = 0; i < 1e7; i++) {
+    if ((new Date().getTime() - start) > milliseconds){
+      break;
+    }
+  }
+}
+
+function sendbutton(command){
+var server = '/command?' + command;
+request = new XMLHttpRequest();
+request.open('GET', server, false);
+request.send();
+if(request.status != 200) {
+alert( request.status + ': ' + request.statusText );
+}
+sleep(1000);
+return 0;
+};
+
+</script>
+</head>
+<!-- =============================================================================================================== -->
+
+<form action='none' onsubmit='return false' name="mainform" id="mainform">
+  <h1>
+    <div class="message-box" style="display: none;" id="message"></div>
+    CurtainStepper
+  </h1>
+
+<div id="Main">
+  <div class="container_column" style="margin-bottom: 1em;">
+    <div class="container_row" style="justify-content: space-around; align-items: center;">
+      <input id='zero' type='submit' name='zero' value='Начальная позиция' onclick='sendbutton("zero");' class="button">
+      <input id='calibrate' type='submit' name='calibrate' value='Калибровать' onclick='sendbutton("calibrate");' class="button">
+      <input id='reverse' type='submit' name='reverse' value='Реверс' onclick='sendbutton("ch_dir");' class="button">
+    </div>
+    <div class="container_row" style="justify-content: space-around; align-items: center;">
+      <input id='go_up' type='submit' name='go_up' value='Вверх' onclick='sendbutton("go_up");' class="button">
+      <input id='go_down' type='submit' name='go_down' value='Вниз' onclick='sendbutton("go_down");' class="button">
+      <input id='stop' type='submit' name='stop' value='Стоп' onclick='sendbutton("stop");' class="button">
+    </div>
+    <div class="container_row" style="justify-content: space-around; align-items: center;">
+      <input id='go_pos' type='submit' name='go_pos' value='Позиция' onclick='sendbutton("go_pos=30");' class="button">
+    </div>
+  </div>
+  
+</div>
+
+
+</form>
