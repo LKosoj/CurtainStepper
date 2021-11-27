@@ -14,6 +14,8 @@
 #include <EEPROM.h>
 #include <ESPAsyncWiFiManager.h>
 #include <SPIFFSEditor.h>
+#include <GyverStepper.h>
+#include <GyverButton.h>
 
 #include "CurtainStepper.h"
 
@@ -21,6 +23,40 @@
 #include <ArduinoOTA.h>
 #endif
 
+void taskButton(void *pvParameters);
+SemaphoreHandle_t btnSemaphore;
+
+void IRAM_ATTR isrBTN_TICK() {
+  //  portBASE_TYPE xTaskWoken;
+  // Прерывание по кнопке, отпускаем семафор
+  //  xSemaphoreGiveFromISR( btnSemaphore, &xTaskWoken );
+  xSemaphoreGiveFromISR(btnSemaphore, NULL);
+  //  if ( xTaskWoken == pdTRUE) {
+  //    taskYIELD();
+  //  }
+}
+
+void taskButton(void *pvParameters) {
+  // Создаем семафор
+  btnSemaphore = xSemaphoreCreateBinary();
+  // Сразу "берем" семафор чтобы не было первого ложного срабатывания кнопки
+  xSemaphoreTake(btnSemaphore, 100);
+#ifdef BTN_PIN
+  btn.setType(LOW_PULL);
+  btn.setTickMode(MANUAL);
+  btn.setDebounce(30);
+  attachInterrupt(BTN_PIN, isrBTN_TICK, CHANGE);
+#endif
+
+  while (true) {
+    xSemaphoreTake(btnSemaphore, portMAX_DELAY);
+    // Отключаем прерывание для устранения повторного срабатывания прерывания во время обработки
+    detachInterrupt(BTN_PIN);
+    btn.tick();
+    attachInterrupt(BTN_PIN, isrBTN_TICK, CHANGE);
+    //vTaskDelay(100);
+  }
+}
 
 void stopService(void) {
   timerAlarmDisable(timer);
@@ -54,7 +90,20 @@ void setup() {
   ESP32PWM::allocateTimer(2);
   ESP32PWM::allocateTimer(3);
 
+  btn.setType(LOW_PULL);
+  btn.setTickMode(AUTO);
+  btn.setDebounce(50);
   
+  //Запускаем таск для обработки нажатия кнопки и энкодера
+  xTaskCreatePinnedToCore(
+    taskButton,      /* Function to implement the task */
+    "taskButton",    /* Name of the task */
+    4000,            /* Stack size in words */
+    NULL,            /* Task input parameter */
+    1,               /* Priority of the task */
+    &SysTickerTask1, /* Task handle. */
+    1);              /* Core where the task should run */
+
   // можно установить скорость
   stepper.setSpeed(DRIVER_STEPS);    // в шагах/сек
 
@@ -76,6 +125,10 @@ void setup() {
 
   //StepperMoving = false;
   //delay(2000);
+
+  btn.tick();      // отработка нажатия
+  if (btn.isHold()) {
+  }
 
   //Подключаемся к WI-FI
   //AsyncWiFiManagerParameter custom_blynk_token("blynk", "blynk token", SamSetup.blynkauth, 33, "blynk token");
@@ -141,6 +194,7 @@ void setup() {
 
   WebServerInit();
   read_config();
+  Curt_Status = STOP;
   curt_go_zero();
 }
 
@@ -171,6 +225,7 @@ void curt_stop(){
     EEPROM.commit();
   }
   if (Curt_Status == TO_ZERO) {
+    time_to_zero = 0;
     curt_set_zero();
   }
   stepper.brake();
@@ -181,6 +236,8 @@ void curt_stop(){
 
 void curt_go_zero(){
   curt_stop();
+  time_to_zero = millis();
+  //Serial.println("time_to_zero = " + (String)time_to_zero);
   stepper.setCurrent(99999999);
   stepper.setTarget(0);
   Serial.println("current=" + (String)stepper.getCurrent());
@@ -225,7 +282,8 @@ byte get_curt_status(){
 }
 
 void curt_set_zero(){
-   stepper.setCurrent(0);
+  //if (Curt_Status != STOP) curt_stop();
+  stepper.setCurrent(0);
 }
 
 void read_config() {
@@ -246,9 +304,20 @@ void loop() {
 
   ws.cleanupClients();
 
-  curt_status = get_curt_status();
+  //curt_status = get_curt_status();
   //Serial.println("curt_status = " + (String)curt_status);
-  
+
+  if (Curt_Status == TO_ZERO && (millis() >= (time_to_zero + TIME_TO_ZERO))) {
+    //Serial.println("millis = " + (String)millis());
+    curt_stop();
+  }
+
+  //btn.tick();
+  if (btn.isPress()) {
+    Serial.println("BTN STOP");
+    curt_stop();
+  }
+
   delay(100);
 }
 
