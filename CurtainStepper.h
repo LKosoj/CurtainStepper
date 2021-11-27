@@ -1,6 +1,8 @@
 #define DRIVER_STEP_TIME 4
 #define DRIVER_STEPS 500
 #define EEPROM_SIZE 200
+#define TIME_TO_ZERO 90000
+#define BTN_PIN 35
 
 #define USE_LittleFS
 #define USE_UPDATE_OTA
@@ -42,15 +44,18 @@ DNSServer dns;
 #endif
 
 
-#include <GyverStepper.h>
 GStepper<STEPPER4WIRE_HALF> stepper(2048, 23, 21, 22, 19);
+GButton btn(BTN_PIN);
+
+TaskHandle_t SysTickerTask1 = NULL;
 
 hw_timer_t *timer = NULL;
 portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
 
 volatile bool StepperMoving = false;                            // Индикатор движущегося шагового двигателя
 String jsonstr;                                                 // Строка json
-byte curt_status;                                               // Текущая позиция шторы
+volatile byte curt_status;                                      // Текущая позиция шторы
+volatile uint16_t time_to_zero;
 
 struct SetupEEPROM {
 byte direction;                                                 // Направление движения
