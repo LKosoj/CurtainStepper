@@ -11,9 +11,9 @@ void WebServerInit(void) {
   FS_init();  // Включаем работу с файловой системой
 
   server.serveStatic("/style.css", SPIFFS, "/style.css");
-  server.serveStatic("/favicon.ico", SPIFFS, "/favicon.ico");
-  server.serveStatic("/", SPIFFS, "/index.htm").setTemplateProcessor(indexKeyProcessor);
-  server.serveStatic("/index.htm", SPIFFS, "/index.htm").setTemplateProcessor(indexKeyProcessor);
+  //server.serveStatic("/favicon.ico", SPIFFS, "/favicon.ico");
+  server.serveStatic("/", SPIFFS, "/index.htm");
+  server.serveStatic("/index.htm", SPIFFS, "/index.htm");
 
   server.on("/status", HTTP_GET, [](AsyncWebServerRequest * request) {
     //TempStr = temp;
@@ -44,36 +44,6 @@ void WebServerInit(void) {
 #ifdef __SAMOVAR_DEBUG
   Serial.println("HTTP server started");
 #endif
-}
-
-String indexKeyProcessor(const String &var) {
-  return String();
-}
-
-String setupKeyProcessor(const String &var) {
-  return String();
-}
-
-String calibrateKeyProcessor(const String &var) {
-  return String();
-}
-
-void handleSave(AsyncWebServerRequest *request) {
-  /*
-       int params = request->params();
-        for(int i=0;i<params;i++){
-          AsyncWebParameter* p = request->getParam(i);
-          Serial.print(p->name().c_str());
-          Serial.print("=");
-          Serial.println(p->value().c_str());
-        }
-        //return;
-  */
-
-  AsyncWebServerResponse *response = request->beginResponse(301);
-  response->addHeader("Location", "/");
-  response->addHeader("Cache-Control", "no-cache");
-  request->send(response);
 }
 
 void web_command(AsyncWebServerRequest *request) {
