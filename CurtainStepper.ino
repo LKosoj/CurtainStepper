@@ -92,7 +92,7 @@ void setup() {
 
   btn.setType(LOW_PULL);
   btn.setTickMode(AUTO);
-  btn.setDebounce(50);
+  btn.setDebounce(30);
   
   //Запускаем таск для обработки нажатия кнопки и энкодера
   xTaskCreatePinnedToCore(
@@ -201,12 +201,13 @@ void setup() {
 void curt_go_up(){
   stepper.setSpeed(DRIVER_STEPS);    // в шагах/сек
   stepper.setMaxSpeed(DRIVER_STEPS);
-  curt_go_pos(100);
+  if (CurtSetup.use_btn_zero) curt_go_zero();
+  else curt_go_pos(100);
 }
 
 void curt_go_down(){
-  stepper.setSpeed(DRIVER_STEPS * 2);    // в шагах/сек
-  stepper.setMaxSpeed(DRIVER_STEPS * 2);
+  stepper.setSpeed(DRIVER_STEPS * 3);    // в шагах/сек
+  stepper.setMaxSpeed(DRIVER_STEPS * 3);
   curt_go_pos(0);
 }
 
@@ -302,6 +303,11 @@ void read_config() {
   } else {
     stepper.reverse(true);
   }
+#ifdef USE_BTN_ZERO
+  CurtSetup.use_btn_zero = 1;
+#else
+  CurtSetup.use_btn_zero = 0;
+#endif
 //  CurtSetup.step = 12000;
 }
 
@@ -320,9 +326,9 @@ void loop() {
     curt_stop();
   }
 
-  //btn.tick();
+  btn.tick();
   if (btn.isPress()) {
-    Serial.println("BTN STOP");
+    //Serial.println("BTN STOP");
     curt_stop();
   }
 
