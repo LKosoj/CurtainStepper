@@ -199,10 +199,14 @@ void setup() {
 }
 
 void curt_go_up(){
+  stepper.setSpeed(DRIVER_STEPS);    // в шагах/сек
+  stepper.setMaxSpeed(DRIVER_STEPS);
   curt_go_pos(100);
 }
 
 void curt_go_down(){
+  stepper.setSpeed(DRIVER_STEPS * 2);    // в шагах/сек
+  stepper.setMaxSpeed(DRIVER_STEPS * 2);
   curt_go_pos(0);
 }
 
@@ -236,6 +240,8 @@ void curt_stop(){
 
 void curt_go_zero(){
   curt_stop();
+  stepper.setSpeed(DRIVER_STEPS);    // в шагах/сек
+  stepper.setMaxSpeed(DRIVER_STEPS);
   time_to_zero = millis();
   //Serial.println("time_to_zero = " + (String)time_to_zero);
   stepper.setCurrent(99999999);
@@ -253,6 +259,8 @@ void curt_calibrate(){
     curt_go_zero();
     return;
   }
+  stepper.setSpeed(DRIVER_STEPS * 2);    // в шагах/сек
+  stepper.setMaxSpeed(DRIVER_STEPS * 2);
   stepper.setTarget(99999999);
   Serial.println("current=" + (String)stepper.getCurrent());
   Serial.println("target=" + (String)stepper.getTarget());
