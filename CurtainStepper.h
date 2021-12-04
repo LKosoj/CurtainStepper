@@ -1,8 +1,9 @@
 #define DRIVER_STEP_TIME 4
 #define DRIVER_STEPS 500
 #define EEPROM_SIZE 200
-#define TIME_TO_ZERO 90000
+#define TIME_TO_ZERO 290000
 #define BTN_PIN 35
+#define USE_BTN_ZERO
 
 #define USE_LittleFS
 #define USE_UPDATE_OTA
@@ -60,6 +61,8 @@ volatile uint16_t time_to_zero;
 struct SetupEEPROM {
 byte direction;                                                 // Направление движения
 uint16_t step;                                                  // Всего шагов от нулевой позиции
+byte use_btn_zero;                                              // Использовать датчик нулевой позиции
+byte use_btn_down;                                              // Использовать датчик нижней позиции
 };
 
 SetupEEPROM CurtSetup;
